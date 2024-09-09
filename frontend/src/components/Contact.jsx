@@ -5,14 +5,10 @@ export default function Contact({ listing }) {
   const [landlord, setLandlord] = useState(null);
   const [message, setMessage] = useState("");
 
-  console.log(landlord);
-  
-
   useEffect(() => {
     const fetchLandlord = async () => {
       try {
-        const res = await fetch(`/api/user/${listing.userRef}`);
-
+        const res = await fetch(`/api/user/${listing.userRef}`); // Corrected URL format
         const data = await res.json();
         setLandlord(data);
       } catch (error) {
@@ -22,6 +18,13 @@ export default function Contact({ listing }) {
 
     fetchLandlord();
   }, [listing.userRef]);
+
+  // Ensure landlord and listing are loaded before constructing the mailto link
+  const mailtoLink = landlord
+    ? `mailto:${landlord.email}?subject=Regarding ${listing.name}&body=${encodeURIComponent(
+        message
+      )}`
+    : "#";
 
   return (
     <>
@@ -41,9 +44,12 @@ export default function Contact({ listing }) {
             className="w-full border rounded-md p-3 border-slate-800"
             placeholder="Enter Your Message Here..."
           />
-          <Link to={`mailto:${landlord.email}?subject=Regarding ${listing.name}&body=${message}`} className="uppercase bg-slate-700 rounded-md p-3 w-full text-white text-center">
+          <a
+            href={mailtoLink}
+            className="uppercase bg-slate-700 rounded-md p-3 w-full text-white text-center"
+          >
             send message
-          </Link>
+          </a>
         </div>
       )}
     </>
