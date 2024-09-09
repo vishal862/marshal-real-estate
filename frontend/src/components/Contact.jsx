@@ -5,6 +5,9 @@ export default function Contact({ listing }) {
   const [landlord, setLandlord] = useState(null);
   const [message, setMessage] = useState("");
 
+  console.log(landlord);
+  
+
   useEffect(() => {
     const fetchLandlord = async () => {
       try {
