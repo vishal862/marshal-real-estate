@@ -101,21 +101,43 @@ export const getListings = async (req, res, next) => {
       type = { $in: ["sale", "rent"] };
     }
 
-    const searchTerm = req.query.searchTerm || "";
+    const searchTerm = req.query.searchTerm ? req.query.searchTerm.trim() : "";
 
     const sort = req.query.sort || "createdAt";
     
     const order = req.query.order || "desc";
 
-    const listing = await Listing.find({
-      name : {$regex : searchTerm , $options :'i'},
+    // First, search by location
+    const locationSearchResults = await Listing.find({
+      address: { $regex: searchTerm, $options: 'i' },
       offer,
       furnished,
       parking,
       type
-    }).sort({[sort]:order}).limit(limit).skip(startIndex)
+    })
+      .sort({ [sort]: order })
+      .limit(limit)
+      .skip(startIndex);
 
-    return res.status(200).json(listing);
+    // If no results found, search by name and description
+    let listings = locationSearchResults;
+    if (listings.length === 0 && searchTerm) {
+      listings = await Listing.find({
+        $or: [
+          { name: { $regex: searchTerm, $options: 'i' } },
+          { description: { $regex: searchTerm, $options: 'i' } }
+        ],
+        offer,
+        furnished,
+        parking,
+        type
+      })
+        .sort({ [sort]: order })
+        .limit(limit)
+        .skip(startIndex);
+    }
+
+    return res.status(200).json(listings);
 
   } catch (error) {
     next(error);
